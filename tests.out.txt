@@ -1,0 +1,158 @@
+Errors found!
+tests.lc:56:3-7: listlength1_sk has an invalid reduction!
+
+        56|    =*> c1
+               ^^^^
+
+tests.lc:72:3-7: factorial3 has an invalid reduction!
+
+        72|    =*> c6
+               ^^^^
+
+tests.lc:78:3-7: ackermann2_3 has an invalid reduction!
+
+        78|    =*> c9
+               ^^^^
+
+tests.lc:83:3-7: bigAppend has an invalid reduction!
+
+        83|    =*> cons c1 (cons c2 (cons c3 (cons c4 nil)))
+               ^^^^
+
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    10
+Normalized set size:  10
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    101
+Normalized set size:  101
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    13
+Normalized set size:  13
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    24
+Normalized set size:  24
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    11
+Normalized set size:  11
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    115
+Normalized set size:  115
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    2
+Normalized set size:  2
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    103
+Normalized set size:  103
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    14
+Normalized set size:  14
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    26
+Normalized set size:  26
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    11
+Normalized set size:  11
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    375
+Normalized set size:  375
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    75
+Normalized set size:  75
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    9
+Normalized set size:  9
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    114
+Normalized set size:  114
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    14
+Normalized set size:  14
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    25
+Normalized set size:  25
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    3
+Normalized set size:  3
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    11
+Normalized set size:  11
+Duplicate count:      0
+Duplication factor:   0.00%
+Timed out after 10 seconds.
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    54765
+Normalized set size:  54765
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    2
+Normalized set size:  2
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    331
+Normalized set size:  331
+Duplicate count:      0
+Duplication factor:   0.00%
+Timed out after 10 seconds.
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    72071
+Normalized set size:  72071
+Duplicate count:      0
+Duplication factor:   0.00%
+Timed out after 10 seconds.
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    32458
+Normalized set size:  32458
+Duplicate count:      0
+Duplication factor:   0.00%
+Timed out after 10 seconds.
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    63870
+Normalized set size:  63870
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    222
+Normalized set size:  222
+Duplicate count:      0
+Duplication factor:   0.00%
+[1;91m
+**** Errors found! *************************************************************
+[0m

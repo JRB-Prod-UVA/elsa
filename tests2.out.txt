@@ -1,0 +1,15 @@
+
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    0
+Normalized set size:  0
+Duplicate count:      0
+Duplication factor:   0.00%
+=== Alpha-Equivalent Duplicate Analysis ===
+Original set size:    3
+Normalized set size:  2
+Duplicate count:      1
+Duplication factor:   33.33%
+OK omega_duper.
+[1;92m
+**** OK ************************************************************************
+[0m
