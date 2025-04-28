@@ -1,0 +1,11 @@
+-- * test the hash set size.
+
+let dup = \x -> x x
+let omega = dup (\y -> y y)
+let id = \x -> x
+let false = \x y -> y
+
+eval omega_duper:
+  false omega id
+  =*> false ((\x -> x x) (\x -> x x)) id
+  =*> id
