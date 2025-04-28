@@ -1,0 +1,89 @@
+-- * test the hash set size.
+
+let true = \x y -> x
+let false = \x y -> y
+
+let succ = \n f x -> f (n f x)
+
+let cons = \x y f -> f x y
+let nil = \f -> true
+let head = \lst -> lst true
+let tail = \lst -> lst false
+let empty = \lst -> lst (\x y -> false)
+
+let c0 = \f x -> x
+let c1 = \f x -> f x
+let c2 = \f x -> f (f x)
+let c3 = \f x -> f (f (f x))
+let c5 = \f x -> f (f (f (f (f x))))
+let c6 = \f x -> f (f (f (f (f (f x)))))
+let c8 = \f x -> f (f (f (f (f (f (f (f x)))))))
+let c9 = \f x -> f (f (f (f (f (f (f (f (f x))))))))
+let c25 = \f x -> f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))))))))))
+
+let Y = \g -> (\x -> g(x x)) (\x -> g(x x))
+
+let G = \f l -> empty l c0 (succ (f (tail l)))
+let YG = (\x -> G(x x)) (\x -> G(x x))
+
+eval listlength0:
+  Y G nil
+  =*> G YG nil
+  =*> empty nil c0 (succ (YG (tail nil)))
+  =*> true c0 (succ (YG (tail nil)))
+  =*> c0
+
+eval listlength1:
+  Y G (cons true nil)
+  =*> G YG (cons true nil)
+  =*> empty (cons true nil) c0 (succ (YG (tail (cons true nil))))
+  =*> cons true nil (\x y -> false) c0 (succ (YG (tail (cons true nil))))
+  =*> (\x y -> false) true nil c0 (succ (YG (tail (cons true nil))))
+  =*> false c0 (succ (YG (tail (cons true nil))))
+  =*> succ (YG (tail (cons true nil)))
+  =*> succ (YG (cons true nil false))
+  =*> succ (YG (false true nil))
+  =*> succ (YG nil)
+  =*> succ (G YG nil)
+  =*> succ (empty nil c0 (succ (YG (tail nil))))
+  =*> succ (true c0 (succ (YG (tail nil))))
+  =*> succ c0
+  =*> c1
+  
+eval listlength1_sk:
+  Y G (cons true nil)
+  =*> G YG (cons true nil)
+  =*> c1
+  -- This will generate many intermediate applications
+
+-- More arithmetic examples
+  
+let pow = \m n -> n m
+eval power2_3:
+  pow c2 c3
+  =*> c3 c2
+  =*> c8
+  -- This will generate many intermediate applications
+  
+let mult = \m n f -> m (n f)
+let fact = Y (\f n -> empty n c1 (mult n (f (tail n))))
+eval factorial3:
+  fact (cons c3 (cons c2 (cons c1 nil)))
+  =*> c6
+  -- Will generate many multiplication terms
+
+let ack = Y (\f m n -> empty m (succ n) (empty n (f (tail m) c1) (f (tail m) (f m (tail n)))))
+eval ackermann2_3:
+  ack c2 c3
+  =*> c9
+  
+let append = Y (\f xs ys -> empty xs ys (cons (head xs) (f (tail xs) ys)))
+eval bigAppend:
+  append (cons c1 (cons c2 nil)) (cons c3 (cons c4 nil))
+  =*> cons c1 (cons c2 (cons c3 (cons c4 nil)))
+  -- Generates many intermediate list constructions
+  
+eval bigMultiply:
+  mult c5 c5
+  =*> c25
+  -- Expands to 25 applications of f
