@@ -1,4 +1,7 @@
 {-# LANGUAGE OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Language.Elsa.Eval (elsa, elsaOn) where
 
@@ -6,11 +9,16 @@ import qualified Data.HashMap.Strict  as M
 import qualified Data.HashMap.Lazy    as ML
 import qualified Data.HashSet         as S
 import qualified Data.List            as L
+import qualified Control.Monad.State.Strict as SS
 import           Control.Monad.State
 import           Control.Monad        (foldM)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
+import Data.IORef (newIORef, readIORef, writeIORef)
+import System.Timeout (timeout)
+import System.IO.Unsafe (unsafePerformIO)
+import Text.Printf (printf)
 
 --------------------------------------------------------------------------------
 elsa :: Elsa a -> [Result a]
@@ -33,7 +41,7 @@ checkDupEval :: [Eval a] -> CheckM a (S.HashSet Id)
 checkDupEval = foldM addEvalId S.empty
 
 addEvalId :: S.HashSet Id -> Eval a -> CheckM a (S.HashSet Id)
-addEvalId s e = 
+addEvalId s e =
   if S.member (bindId b) s
     then Left  (errDupEval b)
     else Right (S.insert (bindId b) s)
@@ -47,8 +55,8 @@ mkEnv :: [Defn a] -> CheckM a (Env a)
 mkEnv = foldM expand M.empty
 
 expand :: Env a -> Defn a -> CheckM a (Env a)
-expand g (Defn b e) = 
-  if dupId 
+expand g (Defn b e) =
+  if dupId
     then Left (errDupDefn b)
     else case zs of
       (x,l) : _ -> Left  (Unbound b x l)
@@ -92,21 +100,86 @@ isEq (NormEq _) = isNormEq
 -- | Transitive Reachability
 --------------------------------------------------------------------------------
 isTrnsEq :: Env a -> Expr a -> Expr a -> Bool
-isTrnsEq g e1 e2 = Mb.isJust (findTrans (isEquiv g e2) (canon g e1))
+-- 'unsafePerformIO' is for quick and dirty research purposes only! This should
+-- and WILL NOT be used in the final product!
+isTrnsEq g e1 e2 = unsafePerformIO $ do
+    (result, seen) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
+    -- 'seen' contains all visited expressions, even after timeout
+    printDuplicateAnalysis seen
+    return $ case result of
+        Just _ -> True
+        _ -> False
 
 isUnTrEq :: Env a -> Expr a -> Expr a -> Bool
 isUnTrEq g e1 e2 = isTrnsEq g e2 e1
 
-findTrans :: (Expr a -> Bool) -> Expr a -> Maybe (Expr a)
-findTrans p e = go S.empty (qInit e)
+timeLimit :: Int
+timeLimit = 10
+
+timeMsg :: String
+timeMsg = "Timed out after " ++ show timeLimit ++ " seconds."
+
+-- Track state in an IORef that we can always access
+data SearchState a = SearchState {
+    seenSet :: !(S.HashSet (Expr a)),
+    lastExpr :: !(Maybe (Expr a))
+}
+
+findTransWithSeenIO :: (Expr a -> Bool) -> Expr a -> IO (Maybe (Expr a), S.HashSet (Expr a))
+findTransWithSeenIO p e = do
+    stateRef <- newIORef (SearchState S.empty Nothing)
+    let search = findTransWithSeen stateRef p e
+    result <- getRes $ timeout (timeLimit * 10^6) search
+    finalState <- readIORef stateRef
+    return (result, seenSet finalState)
   where
-    go seen q = do
-      (e, q') <- qPop q
-      if S.member e seen
-        then go seen q'
-        else if p e
-             then return e
-             else go (S.insert e seen) (qPushes q (betas e))
+    findTransWithSeen ref p e = go (qInit e)
+      where
+        go q = do
+          current <- readIORef ref
+          let !seen = seenSet current
+          case qPop q of
+            Nothing -> return Nothing
+            Just (e', q') -> do
+              if S.member e' seen
+                then go q'
+                else if p e'
+                     then do
+                       writeIORef ref (current {lastExpr = Just e'})
+                       return (Just e')
+                     else do
+                       let !newSeen = S.insert e' seen
+                       writeIORef ref (current {seenSet = newSeen})
+                       go (qPushes q' (betas e'))
+    getRes res = do
+      result <- res
+      case result of
+        Just r -> return r
+        Nothing -> putStrLn timeMsg >> return Nothing
+
+-- Analyze alpha-equivalent duplicates in a set
+analyzeAlphaDuplicates :: S.HashSet (Expr a) -> (Int, Int, Float)
+analyzeAlphaDuplicates originalSet =
+    let normalizedSet = S.map alphaNormal originalSet
+        sizeOriginal = S.size originalSet
+        sizeNormalized = S.size normalizedSet
+        duplicates = sizeOriginal - sizeNormalized
+        factor = if sizeOriginal > 0
+                then fromIntegral duplicates / fromIntegral sizeOriginal * 100
+                else 0
+    in (sizeOriginal, sizeNormalized, factor)
+
+-- Pretty-print the duplicate analysis
+printDuplicateAnalysis :: S.HashSet (Expr a) -> IO ()
+printDuplicateAnalysis seen = do
+    let (original, normalized, factor) = analyzeAlphaDuplicates seen
+    putStrLn "=== Alpha-Equivalent Duplicate Analysis ==="
+    putStrLn $ "Original set size:    " ++ show original
+    putStrLn $ "Normalized set size:  " ++ show normalized
+    putStrLn $ "Duplicate count:      " ++ show (original - normalized)
+    putStrLn $ "Duplication factor:   " ++ showFactor factor ++ "%"
+    where
+        showFactor = printf "%.2f"  -- Show 2 decimal places
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence

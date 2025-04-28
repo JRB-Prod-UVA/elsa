@@ -15,7 +15,7 @@ import System.Exit
 import System.Environment   (getArgs)
 import System.FilePath
 import System.Directory
-import System.Timeout
+-- import System.Timeout
 import Language.Elsa.Parser
 import Language.Elsa.Types
 import Language.Elsa.UX
@@ -26,16 +26,7 @@ topMain:: IO ()
 topMain = do
   (m, f) <- getSrcFile
   s      <- readFile f
-  res    <- timeout (timeLimit * 10 ^ 6) (runElsa m f s `catch` exitErrors m f)
-  case res of
-    Just z  -> return z
-    Nothing -> putStrLn timeMsg >> exitFailure
-
-timeLimit :: Int
-timeLimit = 10
-
-timeMsg :: String
-timeMsg = "Timed out after " ++ show timeLimit ++ " seconds."
+  runElsa m f s `catch` exitErrors m f
 
 getSrcFile :: IO (Mode, Text)
 getSrcFile = do
