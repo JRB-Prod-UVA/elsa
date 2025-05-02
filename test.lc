@@ -1,0 +1,45 @@
+-- List length
+
+let true = \x y -> x
+let false = \x y -> y
+
+let succ = \n f x -> f (n f x)
+
+let cons = \x y f -> f x y
+let nil = \f -> true
+let head = \lst -> lst true
+let tail = \lst -> lst false
+let empty = \lst -> lst (\x y -> false)
+
+let c0 = \f x -> x
+let c1 = \f x -> f x
+let c2 = \f x -> f (f x)
+
+let Y = \g -> (\x -> g(x x)) (\x -> g(x x))
+
+let G = \f l -> empty l c0 (succ (f (tail l)))
+let YG = (\x -> G(x x)) (\x -> G(x x))
+
+eval listlength0:
+  Y G nil
+  =*> G YG nil
+  =*> empty nil c0 (succ (YG (tail nil)))
+  =*> true c0 (succ (YG (tail nil)))
+  =*> c0
+
+eval listlength1:
+  Y G (cons true nil)
+  =*> G YG (cons true nil)
+  =*> empty (cons true nil) c0 (succ (YG (tail (cons true nil))))
+  =*> cons true nil (\x y -> false) c0 (succ (YG (tail (cons true nil))))
+  =*> (\x y -> false) true nil c0 (succ (YG (tail (cons true nil))))
+  =*> false c0 (succ (YG (tail (cons true nil))))
+  =*> succ (YG (tail (cons true nil)))
+  =*> succ (YG (cons true nil false))
+  =*> succ (YG (false true nil))
+  =*> succ (YG nil)
+  =*> succ (G YG nil)
+  =*> succ (empty nil c0 (succ (YG (tail nil))))
+  =*> succ (true c0 (succ (YG (tail nil))))
+  =*> succ c0
+  =*> c1
