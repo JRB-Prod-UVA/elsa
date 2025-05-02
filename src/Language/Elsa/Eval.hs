@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, BangPatterns #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns, InstanceSigs #-}
 
 module Language.Elsa.Eval (elsa, elsaOn) where
 
@@ -98,15 +98,76 @@ isUnTrEq :: Env a -> Expr a -> Expr a -> Bool
 isUnTrEq g e1 e2 = isTrnsEq g e2 e1
 
 findTrans :: (Expr a -> Bool) -> Expr a -> Maybe (Expr a)
-findTrans p e = go S.empty (qInit e)
+findTrans p e = go S.empty (qInit $ makeWeightExpr e)
   where
     go seen q = do
-      (e, q') <- qPop q
+      (we, q') <- qPop q
+      let e = getExpr we
       if S.member e seen
         then go seen q'
         else if p e
              then return e
-             else go (S.insert e seen) (qPushes q (betas e))
+             else go (S.insert e seen) (qPushes q (makeWeightExprs $ betas e))
+
+--------------------------------------------------------------------------------
+-- | Transitive Reachability Helpers
+--------------------------------------------------------------------------------
+findExprComplexity :: Expr a -> Float
+findExprComplexity e =
+  let complexity = calcExprComplexity e
+   in appCountWeight * fromIntegral (eAppCount complexity)
+        + (1 - appCountWeight) * fromIntegral (eLamCount complexity)
+
+calcExprComplexity :: Expr a -> ExprComplexity
+calcExprComplexity EVar {} = ExprComplexity 0 0
+calcExprComplexity (ELam _ e _) = addLamCount $ calcExprComplexity e
+calcExprComplexity (EApp e1 e2 _) = addAppCount $ calcExprComplexity e1 + calcExprComplexity e2
+
+data ExprComplexity = ExprComplexity
+  { eAppCount :: !Int,
+    eLamCount :: !Int
+  }
+
+{-The weight factor of eAppCount, so 1 - eAppCount is the weight factor of
+eLamCount by extension. 0.5 is neutral.-}
+appCountWeight :: Float
+appCountWeight = 0.5
+
+instance Num ExprComplexity where
+  ExprComplexity ac1 lc1 + ExprComplexity ac2 lc2 = ExprComplexity (ac1 + ac2) (lc1 + lc2)
+  ExprComplexity ac1 lc1 * ExprComplexity ac2 lc2 = ExprComplexity (ac1 * ac2) (lc1 * lc2)
+  ExprComplexity ac1 lc1 - ExprComplexity ac2 lc2 = ExprComplexity (ac1 - ac2) (lc1 - lc2)
+  abs :: ExprComplexity -> ExprComplexity
+  abs (ExprComplexity ac lc) = ExprComplexity (abs ac) (abs lc)
+  signum (ExprComplexity ac lc) = ExprComplexity (signum ac) (signum lc)
+  fromInteger i = ExprComplexity (fromInteger i) (fromInteger i)
+
+addAppCount :: ExprComplexity -> ExprComplexity
+addAppCount (ExprComplexity ac lc) = ExprComplexity (ac + 1) lc
+
+addLamCount :: ExprComplexity -> ExprComplexity
+addLamCount (ExprComplexity ac lc) = ExprComplexity ac (lc + 1)
+
+-- | Lambda calculus expressions with weighted precedence.
+data WeightedExpr a = WeightedExpr
+  { getExpr :: !(Expr a),
+    getWeight :: !Float
+  }
+
+instance Eq (WeightedExpr a) where
+  (==) we1 we2 = getWeight we1 == getWeight we2
+
+instance Ord (WeightedExpr a) where
+  (<) we1 we2 = getWeight we1 < getWeight we2
+  (<=) we1 we2 = getWeight we1 <= getWeight we2
+  (>) we1 we2 = getWeight we1 > getWeight we2
+  (>=) we1 we2 = getWeight we1 >= getWeight we2
+
+makeWeightExpr :: Expr a -> WeightedExpr a
+makeWeightExpr e = WeightedExpr e (findExprComplexity e)
+
+makeWeightExprs :: [Expr a] -> [WeightedExpr a]
+makeWeightExprs = L.map makeWeightExpr
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence

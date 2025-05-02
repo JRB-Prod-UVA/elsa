@@ -39,7 +39,7 @@ Library
                        unordered-containers,
                        directory,
                        filepath,
-                       dequeue,
+                       pqueue,
                        json
 
   hs-source-dirs:      src
