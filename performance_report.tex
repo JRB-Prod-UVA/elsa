@@ -1,0 +1,40 @@
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{pgf}
+\usepackage{amsmath}
+\usepackage{booktabs}
+
+\title{Program Performance Report}
+\author{Automated Measurement}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Performance Results}
+
+The program \texttt{elsa} was executed 10 times. The average execution time and standard deviation are shown below.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{cc}
+\toprule
+Average Time (s) & Standard Deviation (s) \\
+\midrule
+6.2991 & 0.0907 \\
+\bottomrule
+\end{tabular}
+\caption{Execution Time Statistics}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\input{performance_graph.pgf}
+\caption{Program execution time with error bars representing one standard deviation.}
+\end{figure}
+
+\end{document}
