@@ -1,0 +1,28 @@
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{pgf}
+\usepackage{amsmath}
+\usepackage{booktabs}
+
+\title{Program Performance Report}
+\author{Automated Measurement}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Performance Results}
+
+The program \texttt{elsa} was executed with different weights (5 runs per weight) using input file \texttt{test2.lc}.
+
+\begin{figure}[h]
+\centering
+\input{performance_graph_2.pgf}
+\caption{Program execution time across different weights with error bars representing one standard deviation.}
+\end{figure}
+
+\end{document}
