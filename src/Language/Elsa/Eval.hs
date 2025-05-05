@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, BangPatterns, InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings, BangPatterns, InstanceSigs, ScopedTypeVariables #-}
 
 module Language.Elsa.Eval (elsa, elsaOn) where
 
@@ -7,7 +7,7 @@ import qualified Data.HashMap.Lazy    as ML
 import qualified Data.HashSet         as S
 import qualified Data.List            as L
 import           Control.Monad.State
-import           Control.Monad        (foldM)
+import           Control.Monad        (foldM, when)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
@@ -92,13 +92,13 @@ isEq (NormEq _) = isNormEq
 -- | Transitive Reachability
 --------------------------------------------------------------------------------
 isTrnsEq :: Env a -> Expr a -> Expr a -> Bool
-isTrnsEq g e1 e2 = Mb.isJust (findTrans (isEquiv g e2) (canon g e1))
+isTrnsEq g e1 e2 = Mb.isJust (findTrans (isEquiv g e2) (canon g e1) e2)
 
 isUnTrEq :: Env a -> Expr a -> Expr a -> Bool
 isUnTrEq g e1 e2 = isTrnsEq g e2 e1
 
-findTrans :: (Expr a -> Bool) -> Expr a -> Maybe (Expr a)
-findTrans p e = go S.empty (qInit $ makeWeightExpr e)
+findTrans :: forall a. (Expr a -> Bool) -> Expr a -> Expr a -> Maybe (Expr a)
+findTrans p e1 e2 = go S.empty (qInit $ createWeight e1)
   where
     go seen q = do
       (we, q') <- qPop q
@@ -107,7 +107,11 @@ findTrans p e = go S.empty (qInit $ makeWeightExpr e)
         then go seen q'
         else if p e
              then return e
-             else go (S.insert e seen) (qPushes q (makeWeightExprs $ betas e))
+             else go (S.insert e seen) (qPushes q (createWeights $ betas e))
+    createWeight :: Expr a -> WeightedExpr a
+    createWeight = makeWeightExpr e2
+    createWeights :: [Expr a] -> [WeightedExpr a]
+    createWeights = makeWeightExprs e2
 
 --------------------------------------------------------------------------------
 -- | Transitive Reachability Helpers
@@ -163,11 +167,14 @@ instance Ord (WeightedExpr a) where
   (>) we1 we2 = getWeight we1 > getWeight we2
   (>=) we1 we2 = getWeight we1 >= getWeight we2
 
-makeWeightExpr :: Expr a -> WeightedExpr a
-makeWeightExpr e = WeightedExpr e (findExprComplexity e)
+makeWeightExpr :: Expr a -> Expr a -> WeightedExpr a
+makeWeightExpr e2 e1 = go (WeightedExpr e2 (findExprComplexity e2)) (WeightedExpr e1 (findExprComplexity e1))
+  where
+    go :: WeightedExpr a -> WeightedExpr a -> WeightedExpr a
+    go we2 we1 = WeightedExpr (getExpr we1) (abs $ getWeight we2 - getWeight we1)
 
-makeWeightExprs :: [Expr a] -> [WeightedExpr a]
-makeWeightExprs = L.map makeWeightExpr
+makeWeightExprs :: Expr a -> [Expr a] -> [WeightedExpr a]
+makeWeightExprs e2 = L.map $ makeWeightExpr e2
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence
