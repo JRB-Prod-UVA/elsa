@@ -11,6 +11,7 @@ import           Control.Monad        (foldM)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
+import Debug.Trace (trace)
 
 --------------------------------------------------------------------------------
 elsa :: Elsa a -> [Result a]
@@ -98,16 +99,17 @@ isUnTrEq :: Env a -> Expr a -> Expr a -> Bool
 isUnTrEq g e1 e2 = isTrnsEq g e2 e1
 
 findTrans :: (Expr a -> Bool) -> Expr a -> Maybe (Expr a)
-findTrans p e = go S.empty (qInit $ makeWeightExpr e)
+findTrans p e = go (S.singleton e) (qInit $ makeWeightExpr e)
   where
     go seen q = do
       (we, q') <- qPop q
       let e = getExpr we
-      if S.member e seen
-        then go seen q'
-        else if p e
-             then return e
-             else go (S.insert e seen) (qPushes q (makeWeightExprs $ betas e))
+          insertL = S.union seen . S.fromList
+          !filteredBetaExprs = filterExprs $ betas e
+          filterExprs = filter $ not . (`S.member` seen)
+      if p e
+        then return e
+        else go (insertL filteredBetaExprs) (qPushes q' (makeWeightExprs filteredBetaExprs))
 
 --------------------------------------------------------------------------------
 -- | Transitive Reachability Helpers
