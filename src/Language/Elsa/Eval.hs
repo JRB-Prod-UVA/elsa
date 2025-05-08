@@ -105,7 +105,7 @@ findTrans p e = go (S.singleton e) (qInit $ makeWeightExpr e)
       (we, q') <- qPop q
       let e = getExpr we
           insertL = S.union seen . S.fromList
-          !filteredBetaExprs = filterExprs $ betas e
+          filteredBetaExprs = filterExprs $ betas e
           filterExprs = filter $ not . (`S.member` seen)
       if p e
         then return e
@@ -114,47 +114,17 @@ findTrans p e = go (S.singleton e) (qInit $ makeWeightExpr e)
 --------------------------------------------------------------------------------
 -- | Transitive Reachability Helpers
 --------------------------------------------------------------------------------
-findExprComplexity :: Expr a -> Float
-findExprComplexity e =
-  let complexity = calcExprComplexity e
-   in appCountWeight * fromIntegral (eAppCount complexity)
-        + (1 - appCountWeight) * fromIntegral (eLamCount complexity)
-
-calcExprComplexity :: Expr a -> ExprComplexity
-calcExprComplexity EVar {} = ExprComplexity 0 0
-calcExprComplexity (ELam _ e _) = addLamCount $ calcExprComplexity e
-calcExprComplexity (EApp e1 e2 _) = addAppCount $ calcExprComplexity e1 + calcExprComplexity e2
-
-data ExprComplexity = ExprComplexity
-  { eAppCount :: !Int,
-    eLamCount :: !Int
-  }
-
-{-The weight factor of eAppCount, so 1 - eAppCount is the weight factor of
-eLamCount by extension. 0.5 is neutral.-}
-appCountWeight :: Float
-appCountWeight = 0.5
-
-instance Num ExprComplexity where
-  ExprComplexity ac1 lc1 + ExprComplexity ac2 lc2 = ExprComplexity (ac1 + ac2) (lc1 + lc2)
-  ExprComplexity ac1 lc1 * ExprComplexity ac2 lc2 = ExprComplexity (ac1 * ac2) (lc1 * lc2)
-  ExprComplexity ac1 lc1 - ExprComplexity ac2 lc2 = ExprComplexity (ac1 - ac2) (lc1 - lc2)
-  abs :: ExprComplexity -> ExprComplexity
-  abs (ExprComplexity ac lc) = ExprComplexity (abs ac) (abs lc)
-  signum (ExprComplexity ac lc) = ExprComplexity (signum ac) (signum lc)
-  fromInteger i = ExprComplexity (fromInteger i) (fromInteger i)
-
-addAppCount :: ExprComplexity -> ExprComplexity
-addAppCount (ExprComplexity ac lc) = ExprComplexity (ac + 1) lc
-
-addLamCount :: ExprComplexity -> ExprComplexity
-addLamCount (ExprComplexity ac lc) = ExprComplexity ac (lc + 1)
+findExprComplexity :: Expr a -> Int
+findExprComplexity EVar {} = 0
+findExprComplexity (ELam _ e _) = (1 +) $! findExprComplexity e
+findExprComplexity (EApp (ELam _ e1 _) e2 _) = (((3 +) $! findExprComplexity e1) +) $! findExprComplexity e2
+findExprComplexity (EApp e1 e2 _) = (((2 +) $! findExprComplexity e1) +) $! findExprComplexity e2
 
 -- | Lambda calculus expressions with weighted precedence.
 data WeightedExpr a = WeightedExpr
   { getExpr :: !(Expr a),
-    getWeight :: !Float
-  }
+    getWeight :: !Int
+  } deriving Show
 
 instance Eq (WeightedExpr a) where
   (==) we1 we2 = getWeight we1 == getWeight we2
