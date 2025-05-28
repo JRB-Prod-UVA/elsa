@@ -103,9 +103,10 @@ isTrnsEq :: Env a -> Expr a -> Expr a -> Bool
 -- 'unsafePerformIO' is for quick and dirty research purposes only! This should
 -- and WILL NOT be used in the final product!
 isTrnsEq g e1 e2 = unsafePerformIO $ do
-    (result, seen, loops) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
+    (result, _, loops) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
     -- 'seen' contains all visited expressions, even after timeout
-    printDuplicateAnalysis seen loops
+    putStrLn $ "Current formula: " ++ show e1 ++ " =*> " ++ show e2 ++ "\n"
+    printDuplicateAnalysis loops
     return $ case result of
         Just _ -> True
         _ -> False
@@ -172,19 +173,11 @@ analyzeAlphaDuplicates originalSet =
     in (sizeOriginal, sizeNormalized, factor)
 
 -- Pretty-print the duplicate analysis
-printDuplicateAnalysis :: S.HashSet (Expr a) -> (Int, Int) -> IO ()
-printDuplicateAnalysis seen (n, m) = do
-    let (original, normalized, factor) = analyzeAlphaDuplicates seen
-    putStrLn "=== Alpha-Equivalent Duplicate Analysis ==="
-    putStrLn $ "Original set size:    " ++ show original
-    putStrLn $ "Normalized set size:  " ++ show normalized
-    putStrLn $ "Duplicate count:      " ++ show (original - normalized)
-    putStrLn $ "Duplication factor:   " ++ showFactor factor ++ "%"
+printDuplicateAnalysis :: (Int, Int) -> IO ()
+printDuplicateAnalysis (n, m) = do
     putStrLn "\n===         Main loop Analysis          ==="
     putStrLn $ "Already in \"seen\" skips:           " ++ show m
     putStrLn $ "Amount of beta expanded formulas:  " ++ show n ++ "\n"
-    where
-        showFactor = printf "%.2f"  -- Show 2 decimal places
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence

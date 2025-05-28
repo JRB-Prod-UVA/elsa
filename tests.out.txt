@@ -1,158 +1,189 @@
-Errors found!
-tests.lc:56:3-7: listlength1_sk has an invalid reduction!
+Current formula: ((Y G) nil) =*> ((G YG) nil)
 
-        56|    =*> c1
-               ^^^^
 
-tests.lc:72:3-7: factorial3 has an invalid reduction!
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  10
 
-        72|    =*> c6
-               ^^^^
+Current formula: ((G YG) nil) =*> (((empty nil) c0) (succ (YG (tail nil))))
 
-tests.lc:78:3-7: ackermann2_3 has an invalid reduction!
 
-        78|    =*> c9
-               ^^^^
+===         Main loop Analysis          ===
+Already in "seen" skips:           74
+Amount of beta expanded formulas:  101
 
-tests.lc:83:3-7: bigAppend has an invalid reduction!
+Current formula: (((empty nil) c0) (succ (YG (tail nil)))) =*> ((true c0) (succ (YG (tail nil))))
 
-        83|    =*> cons c1 (cons c2 (cons c3 (cons c4 nil)))
-               ^^^^
 
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    10
-Normalized set size:  10
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    101
-Normalized set size:  101
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    13
-Normalized set size:  13
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    24
-Normalized set size:  24
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    11
-Normalized set size:  11
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    115
-Normalized set size:  115
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    2
-Normalized set size:  2
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    103
-Normalized set size:  103
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    14
-Normalized set size:  14
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    26
-Normalized set size:  26
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    11
-Normalized set size:  11
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    375
-Normalized set size:  375
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    75
-Normalized set size:  75
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    9
-Normalized set size:  9
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    114
-Normalized set size:  114
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    14
-Normalized set size:  14
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    25
-Normalized set size:  25
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    3
-Normalized set size:  3
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    11
-Normalized set size:  11
-Duplicate count:      0
-Duplication factor:   0.00%
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  13
+
+Current formula: ((true c0) (succ (YG (tail nil)))) =*> c0
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  24
+
+Current formula: ((Y G) ((cons true) nil)) =*> ((G YG) ((cons true) nil))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  11
+
+Current formula: ((G YG) ((cons true) nil)) =*> (((empty ((cons true) nil)) c0) (succ (YG (tail ((cons true) nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           74
+Amount of beta expanded formulas:  115
+
+Current formula: (((empty ((cons true) nil)) c0) (succ (YG (tail ((cons true) nil))))) =*> (((((cons true) nil) (\x y -> false)) c0) (succ (YG (tail ((cons true) nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  2
+
+Current formula: (((((cons true) nil) (\x y -> false)) c0) (succ (YG (tail ((cons true) nil))))) =*> (((((\x y -> false) true) nil) c0) (succ (YG (tail ((cons true) nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           74
+Amount of beta expanded formulas:  103
+
+Current formula: (((((\x y -> false) true) nil) c0) (succ (YG (tail ((cons true) nil))))) =*> ((false c0) (succ (YG (tail ((cons true) nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  14
+
+Current formula: ((false c0) (succ (YG (tail ((cons true) nil))))) =*> (succ (YG (tail ((cons true) nil))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  26
+
+Current formula: (succ (YG (tail ((cons true) nil)))) =*> (succ (YG (((cons true) nil) false)))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  11
+
+Current formula: (succ (YG (((cons true) nil) false))) =*> (succ (YG ((false true) nil)))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           435
+Amount of beta expanded formulas:  375
+
+Current formula: (succ (YG ((false true) nil))) =*> (succ (YG nil))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           41
+Amount of beta expanded formulas:  75
+
+Current formula: (succ (YG nil)) =*> (succ ((G YG) nil))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  9
+
+Current formula: (succ ((G YG) nil)) =*> (succ (((empty nil) c0) (succ (YG (tail nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           74
+Amount of beta expanded formulas:  114
+
+Current formula: (succ (((empty nil) c0) (succ (YG (tail nil))))) =*> (succ ((true c0) (succ (YG (tail nil)))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  14
+
+Current formula: (succ ((true c0) (succ (YG (tail nil))))) =*> (succ c0)
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  25
+
+Current formula: (succ c0) =*> c1
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  3
+
+Current formula: ((Y G) ((cons true) nil)) =*> ((G YG) ((cons true) nil))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  11
+
 Timed out after 10 seconds.
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    54765
-Normalized set size:  54765
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    2
-Normalized set size:  2
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    331
-Normalized set size:  331
-Duplicate count:      0
-Duplication factor:   0.00%
+Current formula: ((G YG) ((cons true) nil)) =*> c1
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           147733
+Amount of beta expanded formulas:  54262
+
+Current formula: ((pow c2) c3) =*> (c3 c2)
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  2
+
+Current formula: (c3 c2) =*> c8
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           565
+Amount of beta expanded formulas:  331
+
 Timed out after 10 seconds.
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    72071
-Normalized set size:  72071
-Duplicate count:      0
-Duplication factor:   0.00%
+Current formula: (fact ((cons c3) ((cons c2) ((cons c1) nil)))) =*> c6
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           157658
+Amount of beta expanded formulas:  69938
+
 Timed out after 10 seconds.
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    32458
-Normalized set size:  32458
-Duplicate count:      0
-Duplication factor:   0.00%
+Current formula: ((ack c2) c3) =*> c9
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           30977
+Amount of beta expanded formulas:  29616
+
 Timed out after 10 seconds.
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    63870
-Normalized set size:  63870
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    222
-Normalized set size:  222
-Duplicate count:      0
-Duplication factor:   0.00%
+Current formula: ((append ((cons c1) ((cons c2) nil))) ((cons c3) ((cons c4) nil))) =*> ((cons c1) ((cons c2) ((cons c3) ((cons c4) nil))))
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           125307
+Amount of beta expanded formulas:  60752
+
+Current formula: ((mult c5) c5) =*> c25
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           436
+Amount of beta expanded formulas:  222
+
 [1;91m
 **** Errors found! *************************************************************
 [0m

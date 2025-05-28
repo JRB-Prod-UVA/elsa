@@ -1,14 +1,17 @@
+Current formula: ((false omega) id) =*> ((false ((\x -> (x x)) (\x -> (x x)))) id)
 
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    0
-Normalized set size:  0
-Duplicate count:      0
-Duplication factor:   0.00%
-=== Alpha-Equivalent Duplicate Analysis ===
-Original set size:    3
-Normalized set size:  2
-Duplicate count:      1
-Duplication factor:   33.33%
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           0
+Amount of beta expanded formulas:  0
+
+Current formula: ((false ((\x -> (x x)) (\x -> (x x)))) id) =*> id
+
+
+===         Main loop Analysis          ===
+Already in "seen" skips:           2
+Amount of beta expanded formulas:  3
+
 OK omega_duper.
 [1;92m
 **** OK ************************************************************************
