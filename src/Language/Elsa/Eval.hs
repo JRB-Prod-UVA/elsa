@@ -15,10 +15,10 @@ import           Control.Monad        (foldM)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
-import Data.IORef (newIORef, readIORef, writeIORef)
-import System.Timeout (timeout)
-import System.IO.Unsafe (unsafePerformIO)
-import Text.Printf (printf)
+import           Data.IORef           (newIORef, readIORef, writeIORef)
+import           System.Timeout       (timeout)
+import           System.IO.Unsafe     (unsafePerformIO)
+import           Text.Printf          (printf)
 
 --------------------------------------------------------------------------------
 elsa :: Elsa a -> [Result a]
@@ -103,9 +103,9 @@ isTrnsEq :: Env a -> Expr a -> Expr a -> Bool
 -- 'unsafePerformIO' is for quick and dirty research purposes only! This should
 -- and WILL NOT be used in the final product!
 isTrnsEq g e1 e2 = unsafePerformIO $ do
-    (result, seen) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
+    (result, seen, loops) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
     -- 'seen' contains all visited expressions, even after timeout
-    printDuplicateAnalysis seen
+    printDuplicateAnalysis seen loops
     return $ case result of
         Just _ -> True
         _ -> False
@@ -122,34 +122,36 @@ timeMsg = "Timed out after " ++ show timeLimit ++ " seconds."
 -- Track state in an IORef that we can always access
 data SearchState a = SearchState {
     seenSet :: !(S.HashSet (Expr a)),
-    lastExpr :: !(Maybe (Expr a))
+    lastExpr :: !(Maybe (Expr a)),
+    loops :: !(Int, Int)
 }
 
-findTransWithSeenIO :: (Expr a -> Bool) -> Expr a -> IO (Maybe (Expr a), S.HashSet (Expr a))
+findTransWithSeenIO :: (Expr a -> Bool) -> Expr a -> IO (Maybe (Expr a), S.HashSet (Expr a), (Int, Int))
 findTransWithSeenIO p e = do
-    stateRef <- newIORef (SearchState S.empty Nothing)
+    stateRef <- newIORef (SearchState S.empty Nothing (0, 0))
     let search = findTransWithSeen stateRef p e
     result <- getRes $ timeout (timeLimit * 10^6) search
     finalState <- readIORef stateRef
-    return (result, seenSet finalState)
+    return (result, seenSet finalState, loops finalState)
   where
     findTransWithSeen ref p e = go (qInit e)
       where
         go q = do
           current <- readIORef ref
           let !seen = seenSet current
+          let !(n, m) = loops current
           case qPop q of
             Nothing -> return Nothing
             Just (e', q') -> do
               if S.member e' seen
-                then go q'
+                then writeIORef ref (current {loops = (n, m+1)}) >> go q'
                 else if p e'
                      then do
-                       writeIORef ref (current {lastExpr = Just e'})
+                       writeIORef ref (current {lastExpr = Just e', loops = (n, m)})
                        return (Just e')
                      else do
                        let !newSeen = S.insert e' seen
-                       writeIORef ref (current {seenSet = newSeen})
+                       writeIORef ref (current {seenSet = newSeen, loops = (n + 1, m)})
                        go (qPushes q' (betas e'))
     getRes res = do
       result <- res
@@ -170,14 +172,17 @@ analyzeAlphaDuplicates originalSet =
     in (sizeOriginal, sizeNormalized, factor)
 
 -- Pretty-print the duplicate analysis
-printDuplicateAnalysis :: S.HashSet (Expr a) -> IO ()
-printDuplicateAnalysis seen = do
+printDuplicateAnalysis :: S.HashSet (Expr a) -> (Int, Int) -> IO ()
+printDuplicateAnalysis seen (n, m) = do
     let (original, normalized, factor) = analyzeAlphaDuplicates seen
     putStrLn "=== Alpha-Equivalent Duplicate Analysis ==="
     putStrLn $ "Original set size:    " ++ show original
     putStrLn $ "Normalized set size:  " ++ show normalized
     putStrLn $ "Duplicate count:      " ++ show (original - normalized)
     putStrLn $ "Duplication factor:   " ++ showFactor factor ++ "%"
+    putStrLn "\n===         Main loop Analysis          ==="
+    putStrLn $ "Already in \"seen\" skips:           " ++ show m
+    putStrLn $ "Amount of beta expanded formulas:  " ++ show n ++ "\n"
     where
         showFactor = printf "%.2f"  -- Show 2 decimal places
 
