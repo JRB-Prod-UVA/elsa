@@ -103,9 +103,10 @@ isTrnsEq :: Env a -> Expr a -> Expr a -> Bool
 -- 'unsafePerformIO' is for quick and dirty research purposes only! This should
 -- and WILL NOT be used in the final product!
 isTrnsEq g e1 e2 = unsafePerformIO $ do
-    (result, seen, loops) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
+    (result, _, loops) <- findTransWithSeenIO (isEquiv g e2) (canon g e1)
     -- 'seen' contains all visited expressions, even after timeout
-    printDuplicateAnalysis seen loops
+    putStrLn $ "Current formula: " ++ show e1 ++ " =*> " ++ show e2 ++ "\n"
+    printDuplicateAnalysis loops
     return $ case result of
         Just _ -> True
         _ -> False
@@ -128,13 +129,13 @@ data SearchState a = SearchState {
 
 findTransWithSeenIO :: (Expr a -> Bool) -> Expr a -> IO (Maybe (Expr a), S.HashSet (Expr a), (Int, Int))
 findTransWithSeenIO p e = do
-    stateRef <- newIORef (SearchState S.empty Nothing (0, 0))
+    stateRef <- newIORef (SearchState (S.singleton e) Nothing (0, 0))
     let search = findTransWithSeen stateRef p e
     result <- getRes $ timeout (timeLimit * 10^6) search
     finalState <- readIORef stateRef
     return (result, seenSet finalState, loops finalState)
   where
-    findTransWithSeen ref p e = go (qInit e)
+    findTransWithSeen ref p e = go (qInit $ makeWeightExpr e)
       where
         go q = do
           current <- readIORef ref
@@ -142,17 +143,21 @@ findTransWithSeenIO p e = do
           let !(n, m) = loops current
           case qPop q of
             Nothing -> return Nothing
-            Just (e', q') -> do
-              if S.member e' seen
-                then writeIORef ref (current {loops = (n, m+1)}) >> go q'
-                else if p e'
-                     then do
-                       writeIORef ref (current {lastExpr = Just e', loops = (n, m)})
-                       return (Just e')
-                     else do
-                       let !newSeen = S.insert e' seen
-                       writeIORef ref (current {seenSet = newSeen, loops = (n + 1, m)})
-                       go (qPushes q' (betas e'))
+            Just (we', q') -> do
+              let e' = getExpr we'
+                  insertL = S.union seen . S.fromList
+                  seenBeforeCount = length betaExprs - length filteredBetaExprs
+                  filteredBetaExprs = filterExprs betaExprs
+                  betaExprs = betas e'
+                  filterExprs = filter $ not . (`S.member` seen)
+              if p e'
+                then do
+                  writeIORef ref (current {lastExpr = Just e'})
+                  return (Just e')
+                else do
+                  let !newSeen = insertL filteredBetaExprs
+                  writeIORef ref (current {seenSet = newSeen, loops = (n+1, m+seenBeforeCount)})
+                  go (qPushes q' (makeWeightExprs filteredBetaExprs))
     getRes res = do
       result <- res
       case result of
@@ -172,19 +177,41 @@ analyzeAlphaDuplicates originalSet =
     in (sizeOriginal, sizeNormalized, factor)
 
 -- Pretty-print the duplicate analysis
-printDuplicateAnalysis :: S.HashSet (Expr a) -> (Int, Int) -> IO ()
-printDuplicateAnalysis seen (n, m) = do
-    let (original, normalized, factor) = analyzeAlphaDuplicates seen
-    putStrLn "=== Alpha-Equivalent Duplicate Analysis ==="
-    putStrLn $ "Original set size:    " ++ show original
-    putStrLn $ "Normalized set size:  " ++ show normalized
-    putStrLn $ "Duplicate count:      " ++ show (original - normalized)
-    putStrLn $ "Duplication factor:   " ++ showFactor factor ++ "%"
+printDuplicateAnalysis :: (Int, Int) -> IO ()
+printDuplicateAnalysis (n, m) = do
     putStrLn "\n===         Main loop Analysis          ==="
     putStrLn $ "Already in \"seen\" skips:           " ++ show m
     putStrLn $ "Amount of beta expanded formulas:  " ++ show n ++ "\n"
-    where
-        showFactor = printf "%.2f"  -- Show 2 decimal places
+
+--------------------------------------------------------------------------------
+-- | Transitive Reachability Helpers
+--------------------------------------------------------------------------------
+findExprComplexity :: Expr a -> Int
+findExprComplexity EVar {} = 0
+findExprComplexity (ELam _ e _) = (1 +) $! findExprComplexity e
+findExprComplexity (EApp (ELam _ e1 _) e2 _) = (((3 +) $! findExprComplexity e1) +) $! findExprComplexity e2
+findExprComplexity (EApp e1 e2 _) = (((2 +) $! findExprComplexity e1) +) $! findExprComplexity e2
+
+-- | Lambda calculus expressions with weighted precedence.
+data WeightedExpr a = WeightedExpr
+  { getExpr :: !(Expr a),
+    getWeight :: !Int
+  } deriving Show
+
+instance Eq (WeightedExpr a) where
+  (==) we1 we2 = getWeight we1 == getWeight we2
+
+instance Ord (WeightedExpr a) where
+  (<) we1 we2 = getWeight we1 < getWeight we2
+  (<=) we1 we2 = getWeight we1 <= getWeight we2
+  (>) we1 we2 = getWeight we1 > getWeight we2
+  (>=) we1 we2 = getWeight we1 >= getWeight we2
+
+makeWeightExpr :: Expr a -> WeightedExpr a
+makeWeightExpr e = WeightedExpr e (findExprComplexity e)
+
+makeWeightExprs :: [Expr a] -> [WeightedExpr a]
+makeWeightExprs = L.map makeWeightExpr
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence

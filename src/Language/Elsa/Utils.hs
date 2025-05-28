@@ -2,7 +2,7 @@ module Language.Elsa.Utils where
 
 import qualified Data.HashMap.Strict as M
 import qualified Data.List           as L
-import qualified Data.Dequeue        as Q
+import qualified Data.PQueue.Min     as Q
 import           Data.Hashable
 import           Data.Char (isSpace)
 import           Control.Exception
@@ -61,19 +61,19 @@ fromEither (Right x) = x
 -- | Queue ---------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-newtype Queue a = Q (Q.BankersDequeue a)
+newtype Queue a = Q (Q.MinQueue a)
 
 qEmpty :: Queue a
 qEmpty = Q Q.empty
 
-qInit :: a -> Queue a
+qInit :: Ord a => a -> Queue a
 qInit x = qPushes qEmpty [x]
 
-qPushes :: Queue a -> [a] -> Queue a
-qPushes (Q q) xs = Q (L.foldl' Q.pushFront q xs)
+qPushes :: Ord a => Queue a -> [a] -> Queue a
+qPushes (Q q) xs = Q (L.foldr Q.insert q xs)
 
-qPop :: Queue a -> Maybe (a, Queue a)
-qPop (Q q) = case Q.popBack q of
+qPop :: Ord a => Queue a -> Maybe (a, Queue a)
+qPop (Q q) = case Q.minView q of
                Nothing      -> Nothing
                Just (x, q') -> Just (x, Q q')
 

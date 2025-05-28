@@ -4,5 +4,5 @@ allow-newer: true
 packages:
 - '.'
 extra-deps:
-- dequeue-0.1.12
+- pqueue-1.5.0.0
 - json-0.10
