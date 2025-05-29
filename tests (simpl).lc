@@ -1,0 +1,31 @@
+-- * test the hash set size.
+
+let true = \x y -> x
+let false = \x y -> y
+
+let succ = \n f x -> f (n f x)
+
+let cons = \x y f -> f x y
+let nil = \f -> true
+let head = \lst -> lst true
+let tail = \lst -> lst false
+let empty = \lst -> lst (\x y -> false)
+
+let c0 = \f x -> x
+let c1 = \f x -> f x
+let c2 = \f x -> f (f x)
+let c3 = \f x -> f (f (f x))
+let c5 = \f x -> f (f (f (f (f x))))
+let c6 = \f x -> f (f (f (f (f (f x)))))
+let c8 = \f x -> f (f (f (f (f (f (f (f x)))))))
+let c9 = \f x -> f (f (f (f (f (f (f (f (f x))))))))
+let c25 = \f x -> f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f (f x))))))))))))))))))))))))
+
+let Y = \g -> (\x -> g(x x)) (\x -> g(x x))
+
+let G = \f l -> empty l c0 (succ (f (tail l)))
+let YG = (\x -> G(x x)) (\x -> G(x x))
+
+eval listlength0:
+  Y G nil
+  =*> G YG nil
