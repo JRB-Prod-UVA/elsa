@@ -11,7 +11,7 @@ import qualified Data.HashSet         as S
 import qualified Data.List            as L
 import qualified Control.Monad.State.Strict as SS
 import           Control.Monad.State
-import           Control.Monad        (foldM)
+import           Control.Monad        (foldM, when)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
@@ -144,6 +144,7 @@ findTransWithSeenIO p e = do
           case qPop q of
             Nothing -> return Nothing
             Just (we', q') -> do
+              when (n <= 100) $ putStrLn ("Looking at formula: " ++ show we')
               let e' = getExpr we'
                   insertL = S.union seen . S.fromList
                   seenBeforeCount = length betaExprs - length filteredBetaExprs
