@@ -11,7 +11,7 @@ import qualified Data.HashSet         as S
 import qualified Data.List            as L
 import qualified Control.Monad.State.Strict as SS
 import           Control.Monad.State
-import           Control.Monad        (foldM)
+import           Control.Monad        (foldM, when)
 import qualified Data.Maybe           as Mb -- (isJust, maybeToList)
 import           Language.Elsa.Types
 import           Language.Elsa.Utils  (qPushes, qInit, qPop, fromEither)
@@ -144,6 +144,7 @@ findTransWithSeenIO p e = do
           case qPop q of
             Nothing -> return Nothing
             Just (e', q') -> do
+              when (n <= 100) $ putStrLn ("Looking at formula: " ++ show (makeWeightExpr e'))
               if S.member e' seen
                 then writeIORef ref (current {loops = (n, m+1)}) >> go q'
                 else if p e'
@@ -178,6 +179,36 @@ printDuplicateAnalysis (n, m) = do
     putStrLn "\n===         Main loop Analysis          ==="
     putStrLn $ "Already in \"seen\" skips:           " ++ show m
     putStrLn $ "Amount of beta expanded formulas:  " ++ show n ++ "\n"
+
+--------------------------------------------------------------------------------
+-- | Transitive Reachability Helpers
+--------------------------------------------------------------------------------
+findExprComplexity :: Expr a -> Int
+findExprComplexity EVar {} = 0
+findExprComplexity (ELam _ e _) = (1 +) $! findExprComplexity e
+findExprComplexity (EApp (ELam _ e1 _) e2 _) = (((3 +) $! findExprComplexity e1) +) $! findExprComplexity e2
+findExprComplexity (EApp e1 e2 _) = (((2 +) $! findExprComplexity e1) +) $! findExprComplexity e2
+
+-- | Lambda calculus expressions with weighted precedence.
+data WeightedExpr a = WeightedExpr
+  { getExpr :: !(Expr a),
+    getWeight :: !Int
+  } deriving Show
+
+instance Eq (WeightedExpr a) where
+  (==) we1 we2 = getWeight we1 == getWeight we2
+
+instance Ord (WeightedExpr a) where
+  (<) we1 we2 = getWeight we1 < getWeight we2
+  (<=) we1 we2 = getWeight we1 <= getWeight we2
+  (>) we1 we2 = getWeight we1 > getWeight we2
+  (>=) we1 we2 = getWeight we1 >= getWeight we2
+
+makeWeightExpr :: Expr a -> WeightedExpr a
+makeWeightExpr e = WeightedExpr e (findExprComplexity e)
+
+makeWeightExprs :: [Expr a] -> [WeightedExpr a]
+makeWeightExprs = L.map makeWeightExpr
 
 --------------------------------------------------------------------------------
 -- | Definition Equivalence
